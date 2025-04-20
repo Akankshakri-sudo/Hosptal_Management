@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Doctor search functionality
   const searchButton = document.getElementById('search-button');
+  const sortDropdown = document.getElementById('sort-option');
   if (searchButton) {
       searchButton.addEventListener('click', function(e) {
           e.preventDefault();
@@ -11,9 +12,20 @@ document.addEventListener('DOMContentLoaded', function() {
           searchDoctors(doctorSearch, locationSearch);
       });
   }
+  if (sortDropdown) {
+    sortDropdown.addEventListener('change', function() {
+        const doctorSearch = document.getElementById('doctor-search').value;
+        const locationSearch = document.getElementById('location-search').value;
+        searchDoctors(doctorSearch, locationSearch);
+    });
+  }
 });
 
 function searchDoctors(specialization = '', location = '') {
+  const sortOption = document.getElementById('sort-option').value.split(',');
+  const sortBy = sortOption[0];
+  const sortOrder = sortOption[1];
+
   // Get or create results container once (not on every search)
   let resultsContainer = document.getElementById('doctor-results');
   if (!resultsContainer) {
@@ -31,6 +43,8 @@ function searchDoctors(specialization = '', location = '') {
   const url = new URL('http://localhost/hospital-management-php/api/doctors.php');
   if (specialization) url.searchParams.append('specialization', specialization);
   if (location) url.searchParams.append('city', location); 
+  url.searchParams.append('sort', sortBy);
+  url.searchParams.append('order', sortOrder);
 
   fetch(url)
     .then(response => {
@@ -113,18 +127,19 @@ function displayDoctors(doctors) {
       // console.log("HOSPOS.............", doctor.photo_url);
       
       return `
-      <div class="doctor-card" data-debug-id="${doctor.id}">
-          <div class="doctor-image">
-              ${imgTag}
-          </div>
-          <div class="doctor-info">
-              <h4>${doctor.name}</h4>
-              <p class="specialization">${doctor.specialization}</p>
-              <p class="location">${doctor.location}, ${doctor.city}</p>
-              ${doctor.experience ? `<p class="experience">${doctor.experience} years experience</p>` : ''}
-              <button class="book-btn" data-id="${doctor.id}">Book Appointment</button>
-          </div>
-      </div>`;
+        <div class="doctor-card" data-debug-id="${doctor.id}">
+            <div class="doctor-image">
+                ${imgTag}
+                ${doctor.available ? '<span class="availability-badge">Available</span>' : '<span class="availability-badge unavailable">Not Available</span>'}
+            </div>
+            <div class="doctor-info">
+                <h4>${doctor.name}</h4>
+                <p class="specialization">${doctor.specialization}</p>
+                <p class="location">${doctor.location}, ${doctor.city}</p>
+                ${doctor.experience ? `<p class="experience">${doctor.experience} years experience</p>` : ''}
+                <button class="book-btn" data-id="${doctor.id}" ${doctor.available ? '' : 'disabled'}>Book Appointment</button>
+            </div>
+        </div>`;
     }).join('');
 
     console.log('Adding click handlers for booking buttons');

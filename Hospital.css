@@ -1488,3 +1488,45 @@ footer{
   /* .doctor-image img.loaded {
     opacity: 1;
   } */
+
+  .sort-dropdown {
+    grid-column: span 3;
+    margin-top: 10px;
+}
+
+.sort-dropdown select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #e4e4e4;
+    background-color: #f7fbff;
+    font-size: 0.9rem;
+    color: #535353;
+}
+
+@media (max-width: 620px) {
+    .sort-dropdown {
+        grid-column: span 1;
+    }
+}
+
+.availability-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.availability-badge.unavailable {
+    background-color: #f44336;
+}
+
+.doctor-card .book-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
