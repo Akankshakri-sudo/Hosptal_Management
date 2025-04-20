@@ -67,8 +67,8 @@
                     <option value="experience,DESC">Most Experienced First</option>
                     <!-- <option value="experience,ASC">Least Experienced First</option> -->
                     <option value="available,DESC">Available First</option>
-                    <option value="name,ASC">A-Z</option>
-                    <option value="name,DESC">Z-A</option>
+                    <!-- <option value="name,ASC">A-Z</option>
+                    <option value="name,DESC">Z-A</option> -->
                 </select>
             </div>
         </div>
@@ -466,13 +466,13 @@
 
     </section>
 
-    <section id="subscribe">
+    <!-- <section id="subscribe">
         <h3>Subscribe For New Updates From WeCare</h3>
         <form class="subscribe-box">
             <input type="email" placeholder="Example@site.com">
             <button>Subscribe</button>
         </form>
-    </section>
+    </section> -->
     
     <section class="Appnt-form" id="form">
         <div class="form-container">
@@ -482,37 +482,30 @@
                     <input type="text" id="name" class="form-input" placeholder="Enter Your Name" required>
                 </div>
                 <div class="form-group">
-                    <input type="number" id="mobile" class="form-input" placeholder="Your Mobile Number" required>
+                    <input type="tel" id="mobile" class="form-input" placeholder="Your Mobile Number" required>
                 </div>
                 <div class="form-group">
                     <input type="email" id="email" class="form-input" placeholder="Your Email Address" required>
                 </div>
                 <div class="form-group">
-                    <input type="date" id="date" class="form-input" placeholder="Appointment Date" required>
+                    <input type="date" id="date" class="form-input" placeholder="Appointment Date" required min="">
                 </div>
                 <div class="form-group">
-                <select id="time-slot" class="form-input" required>
-                    <option value="" disabled selected >Select Time Slot</option>
-                    <option value="9-10am">9:00 AM - 10:00 AM</option>
-                    <option value="10-11am">10:00 AM - 11:00 AM</option>
-                    <option value="11-12pm">11:00 AM - 12:00 PM</option>
-                    <option value="1-2pm">1:00 PM - 2:00 PM</option>
-                    <option value="3-4pm">3:00 PM - 4:00 PM</option>
-                </select>
-            </div>
-
-            
-            <div class="form-group">
-                <select id="doctor-category" class="form-input" required>
-                    <option value="" disabled selected>Select Doctor Category</option>
-                    <option value="general">General Physician</option>
-                    <option value="dermatologist">Dermatologist</option>
-                    <option value="pediatrician">Pediatrician</option>
-                    <option value="cardiologist">Cardiologist</option>
-                    <option value="orthopedic">Orthopedic</option>
-                </select>
-            </div>
-                
+                    <select id="time-slot" class="form-input" required>
+                        <option value="" disabled selected>Select Time Slot</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="doctor-category" class="form-input" required>
+                        <option value="" disabled selected>Select Doctor Specialty</option>
+                        <option value="Cardiologist">Cardiologist (Heart Specialist)</option>
+                        <option value="Pediatrician">Pediatrician (Child Specialist)</option>
+                        <option value="Orthopedic">Orthopedic Surgeon (Bone Specialist)</option>
+                        <option value="Neurologist">Neurologist (Brain/Nerve Specialist)</option>
+                        <option value="Dermatologist">Dermatologist (Skin Specialist)</option>
+                        <option value="General Physician">General Physician (Primary Care)</option>
+                    </select>
+                </div>
                 <button type="submit" class="submit-btn">Book Appointment</button>
             </form>
         </div>

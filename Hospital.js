@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchDoctors(doctorSearch, locationSearch);
     });
   }
+  initBookingSystem();
 });
 
 function searchDoctors(specialization = '', location = '') {
@@ -88,8 +89,8 @@ function displayDoctors(doctors) {
       return;
   }
 
-  console.group('Doctor Image Debugging');
-  console.log('Starting image preload for', doctors.length, 'doctors');
+  // console.group('Doctor Image Debugging');
+  // console.log('Starting image preload for', doctors.length, 'doctors');
 
   // Preload images before rendering
   const preloadPromises = doctors.map(doctor => {
@@ -114,7 +115,7 @@ function displayDoctors(doctors) {
 
   // Wait for all images to either load or fail
   Promise.all(preloadPromises).then(() => {
-    console.log('All images processed. Rendering doctor cards...');
+    // console.log('All images processed. Rendering doctor cards...');
     
     resultsContainer.innerHTML = doctors.map(doctor => {
       const imgTag = `<img src="${doctor.photo_url}" 
@@ -142,16 +143,208 @@ function displayDoctors(doctors) {
         </div>`;
     }).join('');
 
-    console.log('Adding click handlers for booking buttons');
+    // console.log('Adding click handlers for booking buttons');
     document.querySelectorAll('.book-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const doctorId = this.getAttribute('data-id');
-        alert(`Booking appointment with doctor ID: ${doctorId}`);
+        // alert(`Booking appointment with doctor ID: ${doctorId}`);
       });
     });
 
     console.groupEnd();
   });
+}
+
+let selectedDoctorId = null;
+const timeSlots = ['9-10am', '10-11am', '11-12pm', '1-2pm', '2-3pm', '3-4pm'];
+
+// Function to initialize booking system
+function initBookingSystem() {
+    // Add click handler to all book buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('book-btn')) {
+            selectedDoctorId = e.target.getAttribute('data-id');
+            openBookingForm();
+        }
+    });
+
+    document.getElementById('doctor-category').addEventListener('change', function() {
+      const specialty = this.value;
+      if (specialty) {
+          searchDoctors(specialty, '');
+      }
+    });
+
+    // Form submission handler
+    const form = document.querySelector('.contact-form');
+    form.addEventListener('submit', handleFormSubmit);
+    
+    // Date picker change handler
+    const dateInput = document.getElementById('date');
+    dateInput.addEventListener('change', function() {
+        if (selectedDoctorId) {
+            checkDoctorAvailability(selectedDoctorId, this.value);
+        }
+    });
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').min = today;
+}
+
+function openBookingForm() {
+  document.getElementById('form').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('doctor-category').value = 'general'; // Reset to default
+}
+
+function checkDoctorAvailability(doctorId, date) {
+  const timeSlotSelect = document.getElementById('time-slot');
+  timeSlotSelect.innerHTML = '<option value="" disabled selected>Loading available slots...</option>';
+}
+
+function checkDoctorAvailability(doctorId, date) {
+  const timeSlotSelect = document.getElementById('time-slot');
+  timeSlotSelect.innerHTML = '<option value="" disabled selected>Loading available slots...</option>';
+  
+  fetch(`http://localhost/hospital-management-php/api/appointments.php?doctor_id=${doctorId}&date=${date}`)
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              updateTimeSlots(data.booked_slots);
+          }
+      })
+      .catch(error => {
+          console.error('Error checking availability:', error);
+          timeSlotSelect.innerHTML = '<option value="" disabled selected>Error loading slots</option>';
+      });
+}
+
+function updateTimeSlots(bookedSlots) {
+  const timeSlotSelect = document.getElementById('time-slot');
+  timeSlotSelect.innerHTML = '<option value="" disabled selected>Select Time Slot</option>';
+  
+  timeSlots.forEach(slot => {
+      if (!bookedSlots.includes(slot)) {
+          const option = document.createElement('option');
+          option.value = slot;
+          option.textContent = slot;
+          timeSlotSelect.appendChild(option);
+      }
+  });
+  
+  if (timeSlotSelect.options.length <= 1) {
+      timeSlotSelect.innerHTML = '<option value="" disabled selected>No available slots</option>';
+  }
+}
+
+function handleFormSubmit(event) {
+  event.preventDefault();
+  
+  if (!selectedDoctorId) {
+      showError('Please select a doctor first');
+      return;
+  }
+
+  const form = event.target;
+  const formData = {
+      patient_name: document.getElementById('name').value,
+      patient_email: document.getElementById('email').value,
+      patient_phone: document.getElementById('mobile').value,
+      doctor_id: selectedDoctorId,
+      appointment_date: document.getElementById('date').value,
+      time_slot: document.getElementById('time-slot').value,
+      doctor_specialty: document.getElementById('doctor-category').value
+  };
+
+  // Simple validation
+  if (!formData.patient_name || !formData.patient_email || !formData.patient_phone || 
+      !formData.appointment_date || !formData.time_slot) {
+      showError('Please fill all required fields');
+      return;
+  }
+
+  form.classList.add('form-submitting');
+  const spinner = document.createElement('div');
+  spinner.className = 'loading-spinner';
+  form.appendChild(spinner);
+
+  const submitBtn = event.target.querySelector('.submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Booking...';
+
+  fetch('http://localhost/hospital-management-php/api/appointments.php', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        patient_name: formData.patient_name,
+        patient_email: formData.patient_email,
+        patient_phone: formData.patient_phone,
+        doctor_id: formData.doctor_id,
+        appointment_date: formData.appointment_date,
+        time_slot: formData.time_slot
+      })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+  }
+    return response.json();
+    })
+  .then(data => {
+      if (data.success) {
+        showSuccess('Appointment booked successfully!');
+        form.reset();
+        // Optional: Scroll to success message
+        document.querySelector('.success-message').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+      } else {
+          showError(`Error: ${data.error}`);
+      }
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to book appointment. Please try again.');
+  })
+  .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Book Appointment';
+      form.classList.remove('form-submitting');
+      form.removeChild(spinner);
+  });
+}
+
+function showSuccess(message) {
+  const successMsg = document.createElement('div');
+  successMsg.className = 'success-message';
+  successMsg.textContent = message;
+  document.body.appendChild(successMsg);
+  
+  // Trigger animation
+  setTimeout(() => successMsg.classList.add('show'), 10);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+      successMsg.classList.remove('show');
+      setTimeout(() => document.body.removeChild(successMsg), 300);
+  }, 3000);
+}
+
+function showError(message) {
+  const errorMsg = document.createElement('div');
+  errorMsg.className = 'success-message';
+  errorMsg.style.background = '#f44336';
+  errorMsg.textContent = message;
+  document.body.appendChild(errorMsg);
+  
+  setTimeout(() => errorMsg.classList.add('show'), 10);
+  
+  setTimeout(() => {
+      errorMsg.classList.remove('show');
+      setTimeout(() => document.body.removeChild(errorMsg), 300);
+  }, 3000);
 }
 
 var swiper = new Swiper(".mySwiperservices", {
@@ -244,5 +437,5 @@ form.addEventListener('submit', function (event) {
     console.log('Appointment Details:', appointmentDetails);
 
    
-    alert('Appointment booked successfully!');
+    // alert('Appointment booked successfully!');
 });
